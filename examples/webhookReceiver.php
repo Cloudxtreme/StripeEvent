@@ -7,15 +7,28 @@
 
 require_once __DIR__ . "/../vendor/autoload.php";
 
-$stripeEvent = new \Akkroo\StripeEvent\StripeEvent();
+use \Akkroo\StripeEvent\StripeEvent;
+
+try {
+	$stripeEvent = new StripeEvent();
+} catch(\Akkroo\StripeEvent\Exceptions\StripeEventException $e) {
+	StripeEvent::sendExceptionResponse($e);
+	exit(1);
+}
 
 switch($stripeEvent->getType()) {
 	case 'account.updated':
-		echo "Account updated:\n";
-		var_dump($stripeEvent->getObject());
-		echo "\nPreviously:\n";
-		var_dump($stripeEvent->getPreviousAttributes());
+		// account updated
+		// perform action
+		break;
+	case 'charge.succeeded':
+		// charge succeeded
+		// perform action
 		break;
 	default:
-		echo 'unknown event';
+		echo 'Unhandled event';
+		break;
 }
+
+StripeEvent::sendSuccessResponse();
+exit(0);

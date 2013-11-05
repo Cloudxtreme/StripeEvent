@@ -23,6 +23,14 @@ class StripeEvent {
 	private $input;
 	
 	/**
+	 * 
+	 * @param boolean $fetchInput	If true, the webbhook data will be automatically fetched from the PHP input stream on construct
+	 */
+	public function __construct($fetchInput = true) {
+		if($fetchInput) $this->ensureInput();
+	}
+	
+	/**
 	 * Set the WebHook input
 	 * 
 	 * You can use the class to process an input after the fact by setting it here.  Otherwise it is automatically fetched from the HTTP request body
@@ -55,8 +63,7 @@ class StripeEvent {
 	 * @return array The raw input object as an associative array
 	 */
 	public function getInput() {
-		$this->ensureInput();
-		return $this->input;
+		return $this->ensureInput();
 	}
 	
 	/**
@@ -75,12 +82,12 @@ class StripeEvent {
 	 * Ensure the input payload exists, or throw an exception if not
 	 * 
 	 * @throws StripeEventException Exception if input could not be fetched
+	 * @return array The input array
 	 */
 	private function ensureInput() {
-		if(!$this->input) {
-			$this->getInputFromHTTP();
-			if(!$this->input) throw new StripeEventException('Could not fetch input', StripeEventException::INPUT_FETCH_FAILED);
-		}
+		if(!$this->input && !$this->getInputFromHTTP())
+			throw new StripeEventException('Could not fetch input', StripeEventException::INPUT_FETCH_FAILED);
+		return $this->input;
 	}
 	
 	/**
@@ -166,13 +173,12 @@ class StripeEvent {
 	}
 	
 	/**
-	 * Send a HTTP response to Akkroo
+	 * Send a HTTP response to Stripe
 	 * 
 	 * @param string $code	The HTTP response string to send
 	 * @param array $data	The data to send in the response body
-	 * @return static
 	 */
-	private function sendHTTPResponse($code, $data) {
+	private static function sendHTTPResponse($code, $data) {
 		header('HTTP/1.1 '.$code);
 		header('Content-Type: application/json');
 		echo json_encode($data);
@@ -182,9 +188,8 @@ class StripeEvent {
 	 * Send a HTTP response for an exception
 	 * 
 	 * @param \Akkroo\APIClient\Exceptions\StripeEventException $e
-	 * @return static
 	 */
-	public function sendExceptionResponse(StripeEventException $e) {
+	public static function sendExceptionResponse(StripeEventException $e) {
 		$httpCode = '400 Bad Request';
 		switch($e->getCode()) {
 			case StripeEventException::INPUT_FETCH_FAILED:
@@ -194,18 +199,14 @@ class StripeEvent {
 				$httpCode = '400 Bad Request';
 				break;
 		}
-		$this->sendHTTPResponse($httpCode, ['success' => false, 'errorCode' => $e->getCode(), 'errorDescription' => $e->getMessage()]);
-		return $this;
+		static::sendHTTPResponse($httpCode, ['success' => false, 'errorCode' => $e->getCode(), 'errorDescription' => $e->getMessage()]);
 	}
 	
 	/**
 	 * Send a HTTP success response
-	 * 
-	 * @return static
 	 */
-	public function sendSuccessResponse() {
-		$this->sendHTTPResponse('200 OK', ['success' => true]);
-		return $this;
+	public static function sendSuccessResponse() {
+		static::sendHTTPResponse('200 OK', ['success' => true]);
 	}
 	
 }

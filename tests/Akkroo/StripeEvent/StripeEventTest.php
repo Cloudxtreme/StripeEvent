@@ -20,7 +20,7 @@ class StripeEventTest extends \PHPUnit_Framework_TestCase {
 	
 	protected function setUp() {
 		parent::setUp();
-		$this->object = new StripeEvent();
+		$this->object = new StripeEvent(false);
 		$this->testInput = json_decode($this->testInputJSON, JSON_OBJECT_AS_ARRAY);
 		ob_start();
 	}
@@ -110,7 +110,7 @@ class StripeEventTest extends \PHPUnit_Framework_TestCase {
 	public function testSendExceptionResponse() {
 		$e = new Exceptions\StripeEventException('test', Exceptions\StripeEventException::INPUT_DECODE_FAILED);
 		ob_start();
-		$this->object->sendExceptionResponse($e);
+		StripeEvent::sendExceptionResponse($e);
 		$output = ob_get_clean();
 		$headers = xdebug_get_headers();
 		$this->assertEquals(400, http_response_code());
@@ -127,7 +127,7 @@ class StripeEventTest extends \PHPUnit_Framework_TestCase {
 	
 	public function testSendSuccessResponse() {
 		ob_start();
-		$this->object->sendSuccessResponse();
+		StripeEvent::sendSuccessResponse();
 		$output = ob_get_clean();
 		$headers = xdebug_get_headers();
 		$this->assertEquals(200, http_response_code());

@@ -11,7 +11,11 @@
 // start output buffering for headers tests
 ob_start();
 
-$loader = class_exists('\Composer\Autoload\ClassLoader') ?
-	new \Composer\Autoload\ClassLoader() :
-	require_once __DIR__ . "/../vendor/autoload.php";
+if(class_exists('\Composer\Autoload\ClassLoader')) {
+	$loader = new \Composer\Autoload\ClassLoader();
+	$loader->register();
+} else {
+	$loader = require_once __DIR__ . "/../vendor/autoload.php";
+}
+
 $loader->add('Akkroo\\', __DIR__);
