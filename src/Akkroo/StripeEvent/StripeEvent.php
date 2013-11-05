@@ -130,7 +130,7 @@ class StripeEvent {
 	 * @throws StripeEventException
 	 * @return integer	The webhook timestamp
 	 */
-	public function getPendingWebhooks() {
+	public function getNumPendingWebhooks() {
 		$this->ensureInput();
 		return isset($this->input['pending_webhooks']) ? $this->input['pending_webhooks'] : null;
 	}
@@ -174,7 +174,7 @@ class StripeEvent {
 	 */
 	private function sendHTTPResponse($code, $data) {
 		header('HTTP/1.1 '.$code);
-		header('Content-type: application/json');
+		header('Content-Type: application/json');
 		echo json_encode($data);
 	}
 	

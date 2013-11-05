@@ -22,6 +22,12 @@ class StripeEventTest extends \PHPUnit_Framework_TestCase {
 		parent::setUp();
 		$this->object = new StripeEvent();
 		$this->testInput = json_decode($this->testInputJSON, JSON_OBJECT_AS_ARRAY);
+		ob_start();
+	}
+	
+	protected function tearDown() {
+//		header_remove();
+		parent::tearDown();
 	}
 	
 	private function setTestInput() {
@@ -34,6 +40,31 @@ class StripeEventTest extends \PHPUnit_Framework_TestCase {
 		
 		$this->object->setInput($this->testInputJSON, false);
 		$this->assertEquals($this->testInput, $this->object->getInput());
+		
+		try {
+			$this->object->setInput($this->testInputJSON.'dfgdsg', false);
+			$this->fail('Expected exception');
+		} catch (Exceptions\StripeEventException $e) {
+			$this->assertEquals(Exceptions\StripeEventException::INPUT_DECODE_FAILED, $e->getCode());
+		}
+		
+		$data = $this->testInput;
+		unset($data['type']);
+		try {
+			$this->object->setInput($data, true);
+			$this->fail('Expected exception');
+		} catch (Exceptions\StripeEventException $e) {
+			$this->assertEquals(Exceptions\StripeEventException::NO_TYPE, $e->getCode());
+		}
+		
+		$data = $this->testInput;
+		unset($data['data']);
+		try {
+			$this->object->setInput($data, true);
+			$this->fail('Expected exception');
+		} catch (Exceptions\StripeEventException $e) {
+			$this->assertEquals(Exceptions\StripeEventException::NO_DATA, $e->getCode());
+		}
 	}
 	
 	public function testGetID() {
@@ -43,41 +74,67 @@ class StripeEventTest extends \PHPUnit_Framework_TestCase {
 	
 	public function testGetType() {
 		$this->setTestInput();
-		$this->assertEquals($this->testInput['id'], $this->object->getID());
+		$this->assertEquals($this->testInput['type'], $this->object->getType());
 	}
 	
 	public function testGetRequest() {
 		$this->setTestInput();
-		$this->assertEquals($this->testInput['id'], $this->object->getID());
+		$this->assertEquals($this->testInput['request'], $this->object->getRequest());
 	}
 	
 	public function testTimeCreated() {
 		$this->setTestInput();
-		$this->assertEquals($this->testInput['id'], $this->object->getID());
+		$this->assertEquals($this->testInput['created'], $this->object->getTimeCreated());
 	}
 	
 	public function testGetPendingWebhooks() {
 		$this->setTestInput();
-		$this->assertEquals($this->testInput['id'], $this->object->getID());
+		$this->assertEquals($this->testInput['pending_webhooks'], $this->object->getNumPendingWebhooks());
 	}
 	
 	public function testLivemode() {
 		$this->setTestInput();
-		$this->assertEquals($this->testInput['id'], $this->object->getID());
+		$this->assertEquals($this->testInput['livemode'], $this->object->livemode());
 	}
 	
 	public function testGetObject() {
 		$this->setTestInput();
-		$this->assertEquals($this->testInput['id'], $this->object->getID());
+		$this->assertEquals($this->testInput['data']['object'], $this->object->getObject());
 	}
 	
 	public function testGetPreviousAttributes() {
 		$this->setTestInput();
-		$this->assertEquals($this->testInput['id'], $this->object->getID());
+		$this->assertEquals($this->testInput['data']['previous_attributes'], $this->object->getPreviousAttributes());
 	}
 	
-	public function testGetID() {
-		$this->setTestInput();
-		$this->assertEquals($this->testInput['id'], $this->object->getID());
+	public function testSendExceptionResponse() {
+		$e = new Exceptions\StripeEventException('test', Exceptions\StripeEventException::INPUT_DECODE_FAILED);
+		ob_start();
+		$this->object->sendExceptionResponse($e);
+		$output = ob_get_clean();
+		$headers = xdebug_get_headers();
+		$this->assertEquals(400, http_response_code());
+		$this->assertTrue(in_array('Content-Type: application/json', $headers), 'Content-Type header not set correctly');
+		$op = json_decode($output, JSON_OBJECT_AS_ARRAY);
+		if(!$op) $this->fail('Could not decode error response');
+		$this->assertArrayHasKey('success', $op);
+		$this->assertEquals(false, $op['success']);
+		$this->assertArrayHasKey('errorCode', $op);
+		$this->assertEquals($e->getCode(), $op['errorCode']);
+		$this->assertArrayHasKey('errorDescription', $op);
+		$this->assertEquals($e->getMessage(), $op['errorDescription']);
+	}
+	
+	public function testSendSuccessResponse() {
+		ob_start();
+		$this->object->sendSuccessResponse();
+		$output = ob_get_clean();
+		$headers = xdebug_get_headers();
+		$this->assertEquals(200, http_response_code());
+		$this->assertTrue(in_array('Content-Type: application/json', $headers), 'Content-Type header not set correctly');
+		$op = json_decode($output, JSON_OBJECT_AS_ARRAY);
+		if(!$op) $this->fail('Could not decode error response');
+		$this->assertArrayHasKey('success', $op);
+		$this->assertEquals(true, $op['success']);
 	}
 }
