@@ -1,8 +1,8 @@
 StripeEvent
 ===========
 
-[![Total Downloads](https://poser.pugx.org/akkroo/stripeevent/downloads.png)](https://packagist.org/packages/akkroo/stripe-event)
-[![Latest Stable Version](https://poser.pugx.org/akkroo/stripeevent/v/stable.png)](https://packagist.org/packages/akkroo/stripe-event)
+[![Total Downloads](https://poser.pugx.org/akkroo/stripe-event/downloads.png)](https://packagist.org/packages/akkroo/stripe-event)
+[![Latest Stable Version](https://poser.pugx.org/akkroo/stripe-event/v/stable.png)](https://packagist.org/packages/akkroo/stripe-event)
 
 
 Usage
