@@ -175,12 +175,20 @@ class StripeEvent {
 	/**
 	 * Send a HTTP response to Stripe
 	 * 
-	 * @param string $code	The HTTP response string to send
+	 * @param string $code	The HTTP response status string to send
 	 * @param array $data	The data to send in the response body
+	 * @param boolean $success	The status of the response
+	 * @param integer $code	The error code
+	 * @param string $errorDescription	A description of the error
 	 */
-	private static function sendHTTPResponse($code, $data) {
+	public static function sendHTTPResponse($code, $success, $errorCode = null, $errorDescription = null) {
 		header('HTTP/1.1 '.$code);
 		header('Content-Type: application/json');
+		$data = ['success' => $success];
+		if($errorCode !== null)
+			$data['errorCode'] = $errorCode;
+		if($errorDescription !== null)
+			$data['errorDescription'] = $errorDescription;
 		echo json_encode($data);
 	}
 	
@@ -198,15 +206,18 @@ class StripeEvent {
 			case StripeEventException::NO_TYPE:
 				$httpCode = '400 Bad Request';
 				break;
+			case StripeEventException::INTERNAL_SERVER_ERROR:
+				$httpCode = '500 Internal Server Error';
+				break;
 		}
-		static::sendHTTPResponse($httpCode, ['success' => false, 'errorCode' => $e->getCode(), 'errorDescription' => $e->getMessage()]);
+		static::sendHTTPResponse($httpCode, false, $e->getCode(), $e->getMessage());
 	}
 	
 	/**
 	 * Send a HTTP success response
 	 */
 	public static function sendSuccessResponse() {
-		static::sendHTTPResponse('200 OK', ['success' => true]);
+		static::sendHTTPResponse('200 OK', true);
 	}
 	
 }

@@ -24,4 +24,8 @@ class StripeEventException extends \Exception {
 	 * No type was found in input data
 	 */
 	const NO_TYPE = 80;
+	/**
+	 * An internal server error occurred
+	 */
+	const INTERNAL_SERVER_ERROR = 500;
 }
